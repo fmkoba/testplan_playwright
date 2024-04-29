@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import BooksAPI from '../../pages/books';
+import { log } from 'console';
 
 const { ISBN, USER_ID, USER_NAME, PASSWORD } = process.env;
 
@@ -82,6 +83,7 @@ test.describe('BookStore API', () => {
 
   test('should remove Books from account', async ({ request }) => {
     const token = await booksAPI.getAuthToken(userName, password);
+    console.log(token);
 
     const booksResponse = await request.delete(
       `${booksAPI.booksEndpoint}?UserId=${userId}`,
