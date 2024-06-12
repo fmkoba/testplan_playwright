@@ -5,16 +5,15 @@ const { ISBN, USER_ID, USER_NAME, PASSWORD } = process.env;
 
 const booksAPI = new BooksAPI();
 
-const userId = USER_ID;
-const isbn = ISBN;
+const userId = USER_ID || '';
+const isbn = ISBN || '';
 const userName = USER_NAME || 'username';
 const password = PASSWORD || 'password';
 
 test.describe('BookStore API', () => {
-  test('should return a list of books', async ({ request }) => {
+  test('should return a list of books', async () => {
     const testBook = booksAPI.GETBooksFixture.books[0];
-
-    const books = await request.get(booksAPI.booksEndpoint);
+    const books = await booksAPI.getBooks();
 
     await expect(books.status()).toBe(200);
 
@@ -26,14 +25,12 @@ test.describe('BookStore API', () => {
     });
   });
 
-  test('should return a 400 for a book that does not exist', async ({
-    request,
-  }) => {
+  test('should return a 400 for a book that does not exist', async () => {
     const isbn = booksAPI.faultyISBN;
     const errorMessage = booksAPI.GETBookErrorMessage;
     const errorCode = booksAPI.GETBookErrorCode;
 
-    const book = await request.get(`${booksAPI.bookEndpoint}?ISBN=${isbn}`);
+    const book = await booksAPI.getBookByISBN(isbn);
 
     await expect(book.status()).toBe(400);
 
@@ -42,12 +39,10 @@ test.describe('BookStore API', () => {
     await expect(bookJson.code).toEqual(errorCode);
   });
 
-  test('should return a book by ISBN', async ({ request }) => {
+  test('should return a book by ISBN', async () => {
     const testBook = booksAPI.GETBooksFixture.books[0];
 
-    const book = await request.get(
-      `${booksAPI.bookEndpoint}?ISBN=${testBook.isbn}`,
-    );
+    const book = await booksAPI.getBookByISBN(testBook.isbn);
 
     await expect(book.status()).toBe(200);
 
@@ -60,6 +55,8 @@ test.describe('BookStore API', () => {
 
   test('should add Books to account', async ({ request }) => {
     const token = await booksAPI.getAuthToken(userName, password);
+
+    // const booksResponse = await booksAPI.addBooksToAccount(userId, isbn, token);
 
     const booksResponse = await request.post(booksAPI.booksEndpoint, {
       data: {
@@ -74,6 +71,7 @@ test.describe('BookStore API', () => {
         Authorization: `Bearer ${token}`,
       },
     });
+
     const booksResponseJson = await booksResponse.json();
     await expect(booksResponse.status()).toBe(201);
     await expect(booksResponseJson).toHaveProperty('books');

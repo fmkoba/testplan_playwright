@@ -16,6 +16,8 @@ interface Books {
 }
 
 export default class BooksAPI {
+  readonly request = request;
+
   readonly booksEndpoint: string;
 
   readonly bookEndpoint: string;
@@ -68,5 +70,35 @@ export default class BooksAPI {
 
     const authResponseJson = await authResponse.json();
     return authResponseJson.token;
+  }
+
+  async getBooks() {
+    const context = await this.request.newContext();
+    const books = await context.get(this.booksEndpoint);
+    return books;
+  }
+
+  async getBookByISBN(isbn: string) {
+    const context = await this.request.newContext();
+    const book = await context.get(`${this.bookEndpoint}?ISBN=${isbn}`);
+    return book;
+  }
+
+  async addBooksToAccount(userId: string, isbn: string, authToken: string) {
+    const context = await this.request.newContext();
+    const booksResponse = await context.post(this.booksEndpoint, {
+      data: {
+        userId,
+        collectionOfIsbns: [
+          {
+            isbn,
+          },
+        ],
+      },
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+    return booksResponse;
   }
 }
